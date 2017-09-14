@@ -14,7 +14,7 @@ enum AlpsManagerError: Error {
 open class AlpsManager: AlpsSDK {
 
 
-    
+
     let defaultHeaders = [
       // FIXME: pass both keys on AlpsManager creation
       "api-key": "833ec460-c09d-11e6-9bb0-cfb02086c30d",
@@ -28,12 +28,12 @@ open class AlpsManager: AlpsSDK {
     // XXX: this has to come from a configuration
     let alpsEndpoint = "https://api.matchmore.io/v4"
     // let alpsEndpoint = "http://localhost:9000"
-    
+
     // Put setup code here. This method is called before the invocation of each test method in t
     let apiKey: String
     var contextManager: ContextManager? = nil
     var matchMonitor: MatchMonitor? = nil
-    
+
     // DEVELOP: Beacons
     var beaconManager: BeaconManager? = nil
 
@@ -48,14 +48,14 @@ open class AlpsManager: AlpsSDK {
 //    var subscriptions: [String: [Subscription]] = [:]
     var publications: [Publication] = []
     var subscriptions: [Subscription] = []
-    
+
     // DEVELOP: Beacons
     // depending on the case beacons will have different class in his array
     // Variant 1 is enum => Device with DeviceType
     // Variant 2 is sub-classes => BeaconDevice
     // Variant 3 is protocol => BeaconDevice
     var beacons: [IBeaconDevice] = []
-    
+
     public convenience init(apiKey: String) {
         self.init(apiKey: apiKey, clLocationManager: CLLocationManager())
     }
@@ -135,7 +135,7 @@ open class AlpsManager: AlpsSDK {
 //            // throw AlpsManagerError.userNotIntialized
 //        }
 //    }
-    
+
     // Create Main device, this function replace createDevice in v 0.0.3
     public func createMobileDevice(name: String, platform: String, deviceToken: String,
                              latitude: Double, longitude: Double, altitude: Double,
@@ -167,7 +167,7 @@ open class AlpsManager: AlpsSDK {
             // throw AlpsManagerError.userNotIntialized
         }
     }
-    
+
     // Create a pinned Device, stays at the same location
     public func createPinDevice(name: String, latitude: Double, longitude: Double, altitude: Double,
                          horizontalAccuracy: Double, verticalAccuracy: Double,
@@ -197,7 +197,7 @@ open class AlpsManager: AlpsSDK {
             // throw AlpsManagerError.userNotIntialized
         }
     }
-    
+
     // Create a BLE iBeacon Device
     public func createIBeaconDevice(name: String, proximityUUID: String, major: NSNumber, minor: NSNumber,
                                     completion: @escaping (_ device: IBeaconDevice?) -> Void) {
@@ -225,24 +225,24 @@ open class AlpsManager: AlpsSDK {
             // throw AlpsManagerError.userNotIntialized
         }
     }
-    
+
     // create a publication for the main device
     public func createPublication(topic: String, range: Double, duration: Double, properties: [String: String],
                                   completion: @escaping (_ publication: Publication?) -> Void) {
         let userCompletion = completion
-        
+
         if let u = alpsUser, let d = alpsDevice {
             if let userId = u.user.id, let deviceId = d.device.id{
                 let publication = Publication.init(deviceId: deviceId, topic: topic, range: range, duration: duration, properties: properties)
                 let _ = Alps.DeviceAPI.createPublication(userId: userId, deviceId: deviceId,
                                                          publication: publication) {
                                                             (publication, error) -> Void in
-                                                            
+
                                                             if let p = publication {
 //                                                                self.publications[deviceId]?.append(p)
                                                                 self.publications.append(p)
                                                             }
-                                                            
+
                                                             userCompletion(publication)
                 }
             } else {
@@ -254,7 +254,7 @@ open class AlpsManager: AlpsSDK {
             // throw AlpsManagerError.userNotIntialized
         }
     }
-    
+
     // Create a publication for the given userId and given deviceId
     public func createPublication(userId: String, deviceId: String, topic: String, range: Double, duration: Double, properties: [String:String],
                                   completion: @escaping (_ publication: Publication?) -> Void) {
@@ -300,7 +300,7 @@ open class AlpsManager: AlpsSDK {
             // throw AlpsManagerError.userNotIntialized
         }
     }
-    
+
     // Create a subscription for the given userId and given deviceId
     public func createSubscription(userId: String, deviceId: String, topic: String, selector: String, range: Double, duration: Double,
                                    completion: @escaping (_ subscription: Subscription?) -> Void) {
@@ -448,7 +448,7 @@ open class AlpsManager: AlpsSDK {
             if let userId = u.user.id, let deviceId = d.device.id {
                 let _ = Alps.UserAPI.getDevice(userId: userId, deviceId: deviceId) {
                     (device, error) -> Void in
-                    
+
                     if let d = device {
                         completion(d)
                     }
@@ -574,7 +574,7 @@ open class AlpsManager: AlpsSDK {
     public func stopUpdatingLocation() {
         contextManager?.stopUpdatingLocation()
     }
-    
+
     //DEVELOP: Beacons
     public func getUuid() -> [UUID]{
         var uuids : [UUID] = []
@@ -586,65 +586,65 @@ open class AlpsManager: AlpsSDK {
         }
         return uuids
     }
-    
+
     public func getClosestOnBeaconUpdate(completion: @escaping ((_ beacon: CLBeacon) -> Void)) {
         if let lm = contextManager {
             lm.getClosestOnBeaconUpdate(completion: completion)
         }
     }
-    
+
     public func getAllOnBeaconUpdate(completion: @escaping ((_ beacon: [CLBeacon]) -> Void)) {
         if let lm = contextManager {
             lm.getAllOnBeaconUpdate(completion: completion)
         }
     }
-    
+
     public func startRangingBeacons(forUuid: UUID, identifier: String){
         contextManager?.startRanging(forUuid: forUuid, identifier: identifier)
     }
-    
+
     public func stopRangingBeacons(forUuid: UUID){
         contextManager?.stopRanging(forUuid: forUuid)
     }
-    
+
     public func startBeaconsProximityEvent(forCLProximity: CLProximity){
         contextManager?.startBeaconsProximityEvent(forCLProximity: forCLProximity)
     }
-    
+
     public func stopBeaconsProximityEvent(forCLProximity: CLProximity){
         contextManager?.stopBeaconsProximityEvent(forCLProximity: forCLProximity)
     }
-    
+
     // Default time to refresh is 60 seconds(= 60'000 milliseconds)
     public func setRefreshTimerForProximityEvent(refreshEveryInMilliseconds: Int){
         contextManager?.refreshTimer = refreshEveryInMilliseconds
     }
-    
+
     private func getBeacons(deviceId: String, completion: @escaping ((_ beacon: IBeaconDevice) -> Void)) {
-        let userId = "00000000-0000-0000-0000-000000000000"
+        let userId = apiKey
         let _ = Alps.UserAPI.getDevice(userId: userId, deviceId: deviceId) {
             (device, error) -> Void in
             if let d = device{
             completion(d as! IBeaconDevice)
             }
         }
-    
+
 //        let _ = Alps.UserAPI.getDevices(userId: userId, completion: {(_ devices, error)in
 //            for d in devices! {
 //                print(d.id)
 //            }
 //        })
     }
-    
+
     public func getBeacons() -> [IBeaconDevice] {
         return beacons
     }
-    
+
     //TOSUPPRESS: function just here in needs
 //    public func fixBeacons(beacons: [IBeaconDevice]){
 //        self.beacons = beacons
 //    }
-//    
+//
 //    public func addBeacon(beacon: IBeaconDevice){
 //        self.beacons.append(beacon)
 //    }
