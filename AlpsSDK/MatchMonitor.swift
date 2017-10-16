@@ -45,14 +45,14 @@ class MatchMonitor {
     }
 
     @objc func checkMatches() {
-        NSLog("checking matches")
+//        NSLog("checking matches")
         alpsManager.getAllMatches {
             (_ matches: Matches) in
-            NSLog("got all matches from the cloud: \(matches)")
+//            NSLog("got all matches from the cloud: \(matches)")
 
             for m in matches {
                 if !self.deliveredMatches.contains(m) {
-                    NSLog("deliver this match: \(m)")
+//                    NSLog("deliver this match: \(m)")
                     self.onMatchClosure(m)
                     self.deliveredMatches.insert(m)
                 }

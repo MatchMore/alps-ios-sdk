@@ -86,10 +86,11 @@ protocol AlpsSDK {
     func stopMonitoringMatches()
     func startUpdatingLocation()
     func stopUpdatingLocation()
-    func startRangingBeacons(forUuid: UUID, identifier: String)
-    func stopRangingBeacons(forUuid: UUID)
-    func startBeaconsProximityEvent(forCLProximity: CLProximity)
-    func stopBeaconsProximityEvent(forCLProximity: CLProximity)
+    // TBD, automation of ranging
+//    func startRangingBeacons(forUuid: UUID, identifier: String)
+//    func stopRangingBeacons(forUuid: UUID)
+//    func startBeaconsProximityEvent(forCLProximity: CLProximity)
+//    func stopBeaconsProximityEvent(forCLProximity: CLProximity)
     
     // Beacons
     func getClosestOnBeaconUpdate(completion: @escaping ((_ beacon: CLBeacon) -> Void))

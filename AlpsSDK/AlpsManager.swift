@@ -12,9 +12,6 @@ enum AlpsManagerError: Error {
 }
 
 open class AlpsManager: AlpsSDK {
-
-
-    
     let defaultHeaders = [
       // FIXME: pass both keys on AlpsManager creation
       "api-key": "833ec460-c09d-11e6-9bb0-cfb02086c30d",
@@ -33,6 +30,7 @@ open class AlpsManager: AlpsSDK {
     let apiKey: String
     var contextManager: ContextManager? = nil
     var matchMonitor: MatchMonitor? = nil
+    var notificationManager: NotificationManager? = nil
 
     // FIXME: add the world id when it's there
     // var world: World
@@ -62,15 +60,18 @@ open class AlpsManager: AlpsSDK {
         self.headers = defaultHeaders.merged(with: ["api-key": apiKey])
         self.contextManager = ContextManager(alpsManager: self, locationManager: clLocationManager)
         self.matchMonitor = MatchMonitor(alpsManager: self)
+        self.notificationManager = NotificationManager(alpsManager: self)
 
         AlpsAPI.basePath = alpsEndpoint
         AlpsAPI.customHeaders = headers
         
-        // DEVELOP: Beacons
-        superGetBeacons(completion: {
-            (_ beacons) in
-            self.beacons = beacons
-        })
+        initialize()
+    }
+    
+    private func initialize(){
+        // Setup to initialize for SDK
+        self.contextManager?.initialize()
+        self.notificationManager?.initialize()
     }
 
     // Create Alps entities
@@ -525,18 +526,6 @@ open class AlpsManager: AlpsSDK {
         contextManager?.stopUpdatingLocation()
     }
     
-    //DEVELOP: Beacons
-//    public func getUuid() -> [UUID]{
-//        var uuids : [UUID] = []
-//        for beacon in beacons{
-//            let uuid = beacon.proximityUUID
-//            if !uuids.contains(UUID.init(uuidString: uuid!)!){
-//                uuids.append(UUID.init(uuidString: uuid!)!)
-//            }
-//        }
-//        return uuids
-//    }
-    
     public func getClosestOnBeaconUpdate(completion: @escaping ((_ beacon: CLBeacon) -> Void)) {
         if let cm = contextManager {
             cm.getClosestOnBeaconUpdate(completion: completion)
@@ -549,35 +538,27 @@ open class AlpsManager: AlpsSDK {
         }
     }
     
-    public func startRangingBeacons(forUuid: UUID, identifier: String){
-        contextManager?.startRanging(forUuid: forUuid, identifier: identifier)
-    }
+    // Automated for the moment TBD. Logic is all the beacons registered on portal are ranged.
+//    public func startRangingBeacons(forUuid: UUID, identifier: String){
+//        contextManager?.startRanging(forUuid: forUuid, identifier: identifier)
+//    }
+//    
+//    public func stopRangingBeacons(forUuid: UUID){
+//        contextManager?.stopRanging(forUuid: forUuid)
+//    }
     
-    public func stopRangingBeacons(forUuid: UUID){
-        contextManager?.stopRanging(forUuid: forUuid)
-    }
-    
-    public func startBeaconsProximityEvent(forCLProximity: CLProximity){
-        contextManager?.startBeaconsProximityEvent(forCLProximity: forCLProximity)
-    }
-    
-    public func stopBeaconsProximityEvent(forCLProximity: CLProximity){
-        contextManager?.stopBeaconsProximityEvent(forCLProximity: forCLProximity)
-    }
+    // Automated for the moment, but it will be open to the developer if he wants to change proximity detection
+//    public func startBeaconsProximityEvent(forCLProximity: CLProximity){
+//        contextManager?.startBeaconsProximityEvent(forCLProximity: forCLProximity)
+//    }
+//    
+//    public func stopBeaconsProximityEvent(forCLProximity: CLProximity){
+//        contextManager?.stopBeaconsProximityEvent(forCLProximity: forCLProximity)
+//    }
     
     // Default time to refresh is 60 seconds(= 60'000 milliseconds)
     public func setRefreshTimerForProximityEvent(refreshEveryInMilliseconds: Int){
         contextManager?.refreshTimer = refreshEveryInMilliseconds
-    }
-    
-    private func superGetBeacons(completion: @escaping ((_ beacons: [IBeaconDevice]) -> Void)){
-        let userId = self.apiKey
-        let _ = Alps.UserAPI.getDevices(userId: userId, completion: {(_ devices, error)in
-            if error == nil {
-            completion(devices as! [IBeaconDevice])
-            }
-        })
-
     }
     
     public func getMainUser() -> User? {
@@ -638,4 +619,11 @@ open class AlpsManager: AlpsSDK {
         return beacons
     }
     
+    public func registerDeviceToken(deviceToken: Data, deviceTokenString: String){
+        notificationManager?.registerDeviceToken(deviceToken: deviceToken, deviceTokenString: deviceTokenString)
+    }
+    
+    public func handleRemoteNotification(userInfo: [AnyHashable : Any]){
+        notificationManager?.handleRemoteNotification(userInfo: userInfo)
+    }
 }
