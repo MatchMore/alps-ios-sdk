@@ -73,8 +73,6 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
                 self.startBeaconsProximityEvent(forCLProximity: .near)
             }
             print("Context Manager is initialized.")
-            
-
         })
     }
     
