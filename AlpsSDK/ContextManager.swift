@@ -28,10 +28,7 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
     static var nearTrigger : [String:ProximityEvent] = [:]
     static var farTrigger : [String:ProximityEvent] = [:]
     static var unknownTrigger : [String:ProximityEvent] = [:]
-    var immediateBeacons : [String] = []
-    var nearBeacons : [String] = []
-    var farBeacons : [String] = []
-    var unknownBeacons : [String] = []
+    var proximityHandler = ProximityHandler()
     var immediateTimer : Timer?
     var nearTimer : Timer?
     var farTimer : Timer?
@@ -195,97 +192,101 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
                 ourBeacon = b[0]
             }
             if let deviceId = ourBeacon?.id{
-                switch beacon.proximity {
-                case .immediate:
-                    if immediateBeacons.contains(deviceId){
-                        // If beacon is already detected no need to do anything
-                    } else {
-                        if nearBeacons.contains(deviceId) {
-                            if let index = nearBeacons.index(of: deviceId) {
-                                nearBeacons.remove(at: index)
-                            }
-                        }
-                        if farBeacons.contains(deviceId) {
-                            if let index = farBeacons.index(of: deviceId) {
-                                farBeacons.remove(at: index)
-                            }
-                        }
-                        if unknownBeacons.contains(deviceId) {
-                            if let index = unknownBeacons.index(of: deviceId) {
-                                unknownBeacons.remove(at: index)
-                            }
-                        }
-                        immediateBeacons.append(deviceId)
-                    }
-                    break
-                case .near:
-                    if nearBeacons.contains(deviceId){
-                        // If beacon is already detected no need to do anything
-                    }else {
-                        if immediateBeacons.contains(deviceId) {
-                            if let index = immediateBeacons.index(of: deviceId) {
-                                immediateBeacons.remove(at: index)
-                            }
-                        }
-                        if farBeacons.contains(deviceId) {
-                            if let index = farBeacons.index(of: deviceId) {
-                                farBeacons.remove(at: index)
-                            }
-                        }
-                        if unknownBeacons.contains(deviceId) {
-                            if let index = unknownBeacons.index(of: deviceId) {
-                                unknownBeacons.remove(at: index)
-                            }
-                        }
-                        nearBeacons.append(deviceId)
-                    }
-                    break
-                case .far:
-                    if farBeacons.contains(deviceId){
-                        // If beacon is already detected no need to do anything
-                    }else {
-                        if immediateBeacons.contains(deviceId) {
-                            if let index = immediateBeacons.index(of: deviceId) {
-                                immediateBeacons.remove(at: index)
-                            }
-                        }
-                        if nearBeacons.contains(deviceId) {
-                            if let index = nearBeacons.index(of: deviceId) {
-                                nearBeacons.remove(at: index)
-                            }
-                        }
-                        if unknownBeacons.contains(deviceId) {
-                            if let index = unknownBeacons.index(of: deviceId) {
-                                unknownBeacons.remove(at: index)
-                            }
-                        }
-                        farBeacons.append(deviceId)
-                    }
-                    break
-                case .unknown:
-                    if unknownBeacons.contains(deviceId){
-                        // If beacon is already detected no need to do anything
-                    }else{
-                        if immediateBeacons.contains(deviceId) {
-                            if let index = immediateBeacons.index(of: deviceId) {
-                                immediateBeacons.remove(at: index)
-                            }
-                        }
-                        if nearBeacons.contains(deviceId) {
-                            if let index = nearBeacons.index(of: deviceId) {
-                                nearBeacons.remove(at: index)
-                            }
-                        }
-                        if farBeacons.contains(deviceId) {
-                            if let index = farBeacons.index(of: deviceId) {
-                                farBeacons.remove(at: index)
-                            }
-                        }
-                        unknownBeacons.append(deviceId)
-                    }
-                    break
-                }
+                filterBeacon(clBeacon: beacon, deviceId: deviceId)
             }
+        }
+    }
+    
+    private func filterBeacon(clBeacon: CLBeacon, deviceId: String){
+            switch clBeacon.proximity {
+            case .immediate:
+                if proximityHandler.immediateBeacons.contains(deviceId){
+                    // If beacon is already detected no need to do anything
+                } else {
+                    if proximityHandler.nearBeacons.contains(deviceId) {
+                        if let index = proximityHandler.nearBeacons.index(of: deviceId) {
+                            proximityHandler.nearBeacons.remove(at: index)
+                        }
+                    }
+                    if proximityHandler.farBeacons.contains(deviceId) {
+                        if let index = proximityHandler.farBeacons.index(of: deviceId) {
+                            proximityHandler.farBeacons.remove(at: index)
+                        }
+                    }
+                    if proximityHandler.unknownBeacons.contains(deviceId) {
+                        if let index = proximityHandler.unknownBeacons.index(of: deviceId) {
+                            proximityHandler.unknownBeacons.remove(at: index)
+                        }
+                    }
+                    proximityHandler.immediateBeacons.append(deviceId)
+                }
+                break
+            case .near:
+                if proximityHandler.nearBeacons.contains(deviceId){
+                    // If beacon is already detected no need to do anything
+                }else {
+                    if proximityHandler.immediateBeacons.contains(deviceId) {
+                        if let index = proximityHandler.immediateBeacons.index(of: deviceId) {
+                            proximityHandler.immediateBeacons.remove(at: index)
+                        }
+                    }
+                    if proximityHandler.farBeacons.contains(deviceId) {
+                        if let index = proximityHandler.farBeacons.index(of: deviceId) {
+                            proximityHandler.farBeacons.remove(at: index)
+                        }
+                    }
+                    if proximityHandler.unknownBeacons.contains(deviceId) {
+                        if let index = proximityHandler.unknownBeacons.index(of: deviceId) {
+                            proximityHandler.unknownBeacons.remove(at: index)
+                        }
+                    }
+                    proximityHandler.nearBeacons.append(deviceId)
+                }
+                break
+            case .far:
+                if proximityHandler.farBeacons.contains(deviceId){
+                    // If beacon is already detected no need to do anything
+                }else {
+                    if proximityHandler.immediateBeacons.contains(deviceId) {
+                        if let index = proximityHandler.immediateBeacons.index(of: deviceId) {
+                            proximityHandler.immediateBeacons.remove(at: index)
+                        }
+                    }
+                    if proximityHandler.nearBeacons.contains(deviceId) {
+                        if let index = proximityHandler.nearBeacons.index(of: deviceId) {
+                            proximityHandler.nearBeacons.remove(at: index)
+                        }
+                    }
+                    if proximityHandler.unknownBeacons.contains(deviceId) {
+                        if let index = proximityHandler.unknownBeacons.index(of: deviceId) {
+                            proximityHandler.unknownBeacons.remove(at: index)
+                        }
+                    }
+                    proximityHandler.farBeacons.append(deviceId)
+                }
+                break
+            case .unknown:
+                if proximityHandler.unknownBeacons.contains(deviceId){
+                    // If beacon is already detected no need to do anything
+                }else{
+                    if proximityHandler.immediateBeacons.contains(deviceId) {
+                        if let index = proximityHandler.immediateBeacons.index(of: deviceId) {
+                            proximityHandler.immediateBeacons.remove(at: index)
+                        }
+                    }
+                    if proximityHandler.nearBeacons.contains(deviceId) {
+                        if let index = proximityHandler.nearBeacons.index(of: deviceId) {
+                            proximityHandler.nearBeacons.remove(at: index)
+                        }
+                    }
+                    if proximityHandler.farBeacons.contains(deviceId) {
+                        if let index = proximityHandler.farBeacons.index(of: deviceId) {
+                            proximityHandler.farBeacons.remove(at: index)
+                        }
+                    }
+                    proximityHandler.unknownBeacons.append(deviceId)
+                }
+                break
         }
     }
     
@@ -356,22 +357,22 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
         // Setting parameters upon the case
         switch forCLProximity{
         case .immediate:
-            beacons = immediateBeacons
+            beacons = proximityHandler.immediateBeacons
             trigger = ContextManager.immediateTrigger
             distance = 0.5
             break
         case .near:
-            beacons = nearBeacons
+            beacons = proximityHandler.nearBeacons
             trigger = ContextManager.nearTrigger
             distance = 3.0
             break
         case .far:
-            beacons = farBeacons
+            beacons = proximityHandler.farBeacons
             trigger = ContextManager.farTrigger
             distance = 50.0
             break
         case .unknown:
-            beacons = unknownBeacons
+            beacons = proximityHandler.unknownBeacons
             trigger = ContextManager.unknownTrigger
             distance = 200.0
             break
@@ -458,7 +459,7 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
                    
                     if gap > 5 * 60 * 1000 {
                         t.removeValue(forKey: id)
-                        for i in 0...3 {
+                        for i in CLProximity.allValues {
                             switch i{
                             case 0:
                                 // unknown
@@ -486,7 +487,7 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
         }
         
         
-        for i in 0...3 {
+        for i in CLProximity.allValues {
             switch i {
             case 0:
                 // unknown
@@ -514,5 +515,21 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
             }
         }
     }
+    
+    class ProximityHandler {
+        var immediateTrigger : [String:ProximityEvent] = [:]
+        var nearTrigger : [String:ProximityEvent] = [:]
+        var farTrigger : [String:ProximityEvent] = [:]
+        var unknownTrigger : [String:ProximityEvent] = [:]
+        var immediateBeacons : [String] = []
+        var nearBeacons : [String] = []
+        var farBeacons : [String] = []
+        var unknownBeacons : [String] = []
+        
+        private func checkEmpty() {
+            
+        }
+    }
+    
 
 }
