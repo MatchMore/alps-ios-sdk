@@ -28,7 +28,7 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
     static var nearTrigger : [String:ProximityEvent] = [:]
     static var farTrigger : [String:ProximityEvent] = [:]
     static var unknownTrigger : [String:ProximityEvent] = [:]
-    var proximityHandler = ProximityHandler()
+    private(set) var proximityHandler : ProximityHandler!
     var immediateTimer : Timer?
     var nearTimer : Timer?
     var farTimer : Timer?
@@ -47,6 +47,7 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
     init(alpsManager: AlpsManager, locationManager: CLLocationManager) {
         self.alpsManager = alpsManager
         self.clLocationManager = locationManager
+        self.proximityHandler = ProximityHandler(contextManager: self)
         super.init()
 
         self.clLocationManager.delegate = self
@@ -64,19 +65,13 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
     // Update locations
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let coord = locations.last {
-//            do {
-                //try self.onLocationUpdateClosure?(locations.last!)
-                //try alpsManager.updateLocation(latitude: coord.coordinate.latitude, longitude: coord.coordinate.longitude,
             self.onLocationUpdateClosure?(locations.last!)
             alpsManager.updateLocation(latitude: coord.coordinate.latitude, longitude: coord.coordinate.longitude,
                                              altitude: coord.altitude, horizontalAccuracy: coord.horizontalAccuracy,
                                              verticalAccuracy: coord.verticalAccuracy) {
                     (_ location) in
-//                    NSLog("updating location to: \(coord.coordinate.latitude), \(coord.coordinate.longitude), \(coord.altitude)")
+                    NSLog("updating location to: \(coord.coordinate.latitude), \(coord.coordinate.longitude), \(coord.altitude)")
                 }
-//            } catch {
-//                // Allow to update location even when there is no device / user created
-//            }
         }
     }
 
@@ -136,38 +131,18 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
                 }
             }
         }
+        
         if let closestBeacon = closest {
-//            do {
-//                // If the developer needs the closest beacon or the detected beacons, he/she can access it with these 2 fields.
-//                try self.closestBeaconClosure?(closestBeacon)
-                    self.closestBeaconClosure?(closestBeacon)
-                    self.detectedBeaconsClosure?(beacons)
-//            } catch {
-//                // just to catch
-//            }
+            self.closestBeaconClosure?(closestBeacon)
+            self.detectedBeaconsClosure?(beacons)
         }
         
         // Proximity Events related
-        parseBeaconsByProximity(beacons)
-        if proximityTrigger.isEmpty {
-            // No proximity event are triggering yet since proximityTrigger array is empty
+        let trigger = proximityHandler.parseBeaconsByProximity(beacons)
+        if trigger {
+            // trigger proximity event because there is change
         } else {
-            for pt in proximityTrigger{
-                switch pt {
-                case .immediate:
-                    triggerBeaconsProximityEvent(forCLProximity: pt)
-                    break
-                case .near:
-                    triggerBeaconsProximityEvent(forCLProximity: pt)
-                    break
-                case .far:
-                    triggerBeaconsProximityEvent(forCLProximity: pt)
-                    break
-                case .unknown:
-                    triggerBeaconsProximityEvent(forCLProximity: pt)
-                    break
-                }
-            }
+            // don't do anything
         }
     }
     
@@ -184,170 +159,12 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
         detectedBeaconsClosure = completion
     }
     
-    private func parseBeaconsByProximity(_ beacons: [CLBeacon]){
-        var ourBeacon : IBeaconDevice?
-        for beacon in beacons {
-            let b = syncBeacon(beacon: beacon)
-            if b.isEmpty != true {
-                ourBeacon = b[0]
-            }
-            if let deviceId = ourBeacon?.id{
-                filterBeacon(clBeacon: beacon, deviceId: deviceId)
-            }
-        }
-    }
-    
-    private func filterBeacon(clBeacon: CLBeacon, deviceId: String){
-            switch clBeacon.proximity {
-            case .immediate:
-                if proximityHandler.immediateBeacons.contains(deviceId){
-                    // If beacon is already detected no need to do anything
-                } else {
-                    if proximityHandler.nearBeacons.contains(deviceId) {
-                        if let index = proximityHandler.nearBeacons.index(of: deviceId) {
-                            proximityHandler.nearBeacons.remove(at: index)
-                        }
-                    }
-                    if proximityHandler.farBeacons.contains(deviceId) {
-                        if let index = proximityHandler.farBeacons.index(of: deviceId) {
-                            proximityHandler.farBeacons.remove(at: index)
-                        }
-                    }
-                    if proximityHandler.unknownBeacons.contains(deviceId) {
-                        if let index = proximityHandler.unknownBeacons.index(of: deviceId) {
-                            proximityHandler.unknownBeacons.remove(at: index)
-                        }
-                    }
-                    proximityHandler.immediateBeacons.append(deviceId)
-                }
-                break
-            case .near:
-                if proximityHandler.nearBeacons.contains(deviceId){
-                    // If beacon is already detected no need to do anything
-                }else {
-                    if proximityHandler.immediateBeacons.contains(deviceId) {
-                        if let index = proximityHandler.immediateBeacons.index(of: deviceId) {
-                            proximityHandler.immediateBeacons.remove(at: index)
-                        }
-                    }
-                    if proximityHandler.farBeacons.contains(deviceId) {
-                        if let index = proximityHandler.farBeacons.index(of: deviceId) {
-                            proximityHandler.farBeacons.remove(at: index)
-                        }
-                    }
-                    if proximityHandler.unknownBeacons.contains(deviceId) {
-                        if let index = proximityHandler.unknownBeacons.index(of: deviceId) {
-                            proximityHandler.unknownBeacons.remove(at: index)
-                        }
-                    }
-                    proximityHandler.nearBeacons.append(deviceId)
-                }
-                break
-            case .far:
-                if proximityHandler.farBeacons.contains(deviceId){
-                    // If beacon is already detected no need to do anything
-                }else {
-                    if proximityHandler.immediateBeacons.contains(deviceId) {
-                        if let index = proximityHandler.immediateBeacons.index(of: deviceId) {
-                            proximityHandler.immediateBeacons.remove(at: index)
-                        }
-                    }
-                    if proximityHandler.nearBeacons.contains(deviceId) {
-                        if let index = proximityHandler.nearBeacons.index(of: deviceId) {
-                            proximityHandler.nearBeacons.remove(at: index)
-                        }
-                    }
-                    if proximityHandler.unknownBeacons.contains(deviceId) {
-                        if let index = proximityHandler.unknownBeacons.index(of: deviceId) {
-                            proximityHandler.unknownBeacons.remove(at: index)
-                        }
-                    }
-                    proximityHandler.farBeacons.append(deviceId)
-                }
-                break
-            case .unknown:
-                if proximityHandler.unknownBeacons.contains(deviceId){
-                    // If beacon is already detected no need to do anything
-                }else{
-                    if proximityHandler.immediateBeacons.contains(deviceId) {
-                        if let index = proximityHandler.immediateBeacons.index(of: deviceId) {
-                            proximityHandler.immediateBeacons.remove(at: index)
-                        }
-                    }
-                    if proximityHandler.nearBeacons.contains(deviceId) {
-                        if let index = proximityHandler.nearBeacons.index(of: deviceId) {
-                            proximityHandler.nearBeacons.remove(at: index)
-                        }
-                    }
-                    if proximityHandler.farBeacons.contains(deviceId) {
-                        if let index = proximityHandler.farBeacons.index(of: deviceId) {
-                            proximityHandler.farBeacons.remove(at: index)
-                        }
-                    }
-                    proximityHandler.unknownBeacons.append(deviceId)
-                }
-                break
-        }
-    }
-    
-    private func syncBeacon(beacon: CLBeacon) -> [IBeaconDevice] {
-        var b : [IBeaconDevice] = self.alpsManager.beacons
-        b = self.alpsManager.beacons.filter{
-            let proximityUUID = $0.proximityUUID!
-            let major = $0.major!
-            let minor = $0.minor!
-            // it will be called the number of time of beacons registered in the app. In example : It will be called 3 times because I have 3 beacons registered.
-            if (proximityUUID.caseInsensitiveCompare(beacon.proximityUUID.uuidString) == ComparisonResult.orderedSame)  && (major as NSNumber) == beacon.major && (minor as NSNumber) == beacon.minor {
-                return true
-            }
-            return false
-        }
-        return b
-    }
-    
-    private func triggerProximityEvent(userId: String, deviceId: String, proximityEvent: ProximityEvent, completion: @escaping (_ proximityEvent: ProximityEvent?) -> Void) {
-        let userCompletion = completion
-        let _ = Alps.DeviceAPI.triggerProximityEvents(userId: userId, deviceId: deviceId, proximityEvent: proximityEvent) {
-            (proximityEvent, error) -> Void in
-            userCompletion(proximityEvent)
-        }
-    }
-    
     public func startBeaconsProximityEvent(forCLProximity: CLProximity) {
         proximityTrigger.insert(forCLProximity)
-        // To change the TIMERS ! https://developer.apple.com/library/content/documentation/Performance/Conceptual/power_efficiency_guidelines_osx/Timers.html Reducing overhead
-//        switch forCLProximity {
-//        case .immediate:
-//            immediateTimer = Timer.scheduledTimer(timeInterval: 2, target: ContextManager.self , selector: #selector(ContextManager.refreshTriggers), userInfo: nil, repeats: true)
-//            break
-//        case .near:
-//            nearTimer = Timer.scheduledTimer(timeInterval: 2, target: ContextManager.self , selector: #selector(ContextManager.refreshTriggers), userInfo: nil, repeats: true)
-//            break
-//        case .far:
-//            farTimer = Timer.scheduledTimer(timeInterval: 300, target: ContextManager.self , selector: #selector(ContextManager.refreshTriggers), userInfo: nil, repeats: true)
-//            break
-//        case .unknown:
-//            unknownTimer = Timer.scheduledTimer(timeInterval: 300, target: ContextManager.self , selector: #selector(ContextManager.refreshTriggers), userInfo: nil, repeats: true)
-//            break
-//        }
     }
     
     public func stopBeaconsProximityEvent(forCLProximity: CLProximity) {
         proximityTrigger.remove(forCLProximity)
-//        switch forCLProximity {
-//        case .immediate:
-//            immediateTimer?.invalidate()
-//            break
-//        case .near:
-//            nearTimer?.invalidate()
-//            break
-//        case .far:
-//            farTimer?.invalidate()
-//            break
-//        case .unknown:
-//            unknownTimer?.invalidate()
-//            break
-//        }
     }
     
     private func triggerBeaconsProximityEvent(forCLProximity: CLProximity) {
@@ -403,6 +220,7 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
                     }
                 }
             } else {
+                // Should be done in another function refreshing()
                 // Check if the existed proximity event needs a refresh on a based timer
                 let proximityEvent = trigger[id]
                 // Represents  the UNIX current time in milliseconds
@@ -442,9 +260,10 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
             }
         }
     }
+
     
     @objc
-    private class func refreshTriggers() {
+    private class func cleanUpTriggers() {
         var trigger : [String:ProximityEvent] = [:]
         func refresh(trigger: [String:ProximityEvent]){
             var t : [String:ProximityEvent] = [:]
@@ -461,19 +280,19 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
                         t.removeValue(forKey: id)
                         for i in CLProximity.allValues {
                             switch i{
-                            case 0:
+                            case .unknown:
                                 // unknown
                                 unknownTrigger = t
                                 break
-                            case 1:
+                            case .immediate:
                                 // immediate
                                 immediateTrigger = t
                                 break
-                            case 2:
+                            case .near:
                                 // near
                                 nearTrigger = t
                                 break
-                            case 3:
+                            case .far:
                                 // far
                                 farTrigger = t
                                 break
@@ -489,22 +308,22 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
         
         for i in CLProximity.allValues {
             switch i {
-            case 0:
+            case .unknown:
                 // unknown
                 trigger = unknownTrigger
                 refresh(trigger: trigger)
                 break
-            case 1:
+            case .immediate:
                 // immediate
                 trigger = immediateTrigger
                 refresh(trigger: trigger)
                 break
-            case 2:
+            case .near:
                 // near
                 trigger = nearTrigger
                 refresh(trigger: trigger)
                 break
-            case 3:
+            case .far:
                 // far
                 trigger = farTrigger
                 refresh(trigger: trigger)
@@ -517,6 +336,8 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
     }
     
     class ProximityHandler {
+        
+        var contextManager : ContextManager!
         var immediateTrigger : [String:ProximityEvent] = [:]
         var nearTrigger : [String:ProximityEvent] = [:]
         var farTrigger : [String:ProximityEvent] = [:]
@@ -526,10 +347,180 @@ class ContextManager: NSObject, CLLocationManagerDelegate {
         var farBeacons : [String] = []
         var unknownBeacons : [String] = []
         
-        private func checkEmpty() {
-            
+        init(contextManager: ContextManager) {
+            self.contextManager = contextManager
+        }
+        
+        func parseBeaconsByProximity(_ beacons: [CLBeacon]) -> Bool {
+            var ourBeacon : IBeaconDevice?
+            var result = false
+            for beacon in beacons {
+                let b = syncBeacon(beacon: beacon)
+                if b.isEmpty != true {
+                    ourBeacon = b[0]
+                }
+                if let deviceId = ourBeacon?.id{
+                    let detectedBeaconChange = removeDuplicate(clBeacon: beacon, deviceId : deviceId)
+                    if detectedBeaconChange == true {
+                        // if one of the detected beacon did change, then we want to trigger a proximity event
+                        result = true
+                    }
+                }
+            }
+            return result
+        }
+        
+        private func syncBeacon(beacon: CLBeacon) -> [IBeaconDevice] {
+            var b : [IBeaconDevice] = self.contextManager.alpsManager.beacons
+            b = self.contextManager.alpsManager.beacons.filter{
+                let proximityUUID = $0.proximityUUID!
+                let major = $0.major!
+                let minor = $0.minor!
+                // it will be called the number of time of beacons registered in the app. In example : It will be called 3 times because I have 3 beacons registered.
+                if (proximityUUID.caseInsensitiveCompare(beacon.proximityUUID.uuidString) == ComparisonResult.orderedSame)  && (major as NSNumber) == beacon.major && (minor as NSNumber) == beacon.minor {
+                    return true
+                }
+                return false
+            }
+            return b
+        }
+        
+        private func removeDuplicate(clBeacon: CLBeacon, deviceId : String) -> Bool {
+            func removeBeacon(deviceId: String, fromArray: [String]) -> [String] {
+                var beaconsId : [String] = []
+                beaconsId = fromArray
+                if let index = beaconsId.index(of: deviceId){
+                    beaconsId.remove(at: index)
+                }
+                return beaconsId
+            }
+            var detectedBeaconChange = false
+            if immediateBeacons.contains(deviceId) || nearBeacons.contains(deviceId) || farBeacons.contains(deviceId) || unknownBeacons.contains(deviceId){
+                if immediateBeacons.contains(deviceId){
+                    immediateBeacons = removeBeacon(deviceId : deviceId, fromArray: immediateBeacons)
+                }
+                if nearBeacons.contains(deviceId) {
+                    nearBeacons = removeBeacon(deviceId: deviceId, fromArray: nearBeacons)
+                }
+                if farBeacons.contains(deviceId) {
+                    farBeacons = removeBeacon(deviceId: deviceId, fromArray: farBeacons)
+                }
+                if unknownBeacons.contains(deviceId) {
+                    unknownBeacons = removeBeacon(deviceId: deviceId, fromArray: unknownBeacons)
+                }
+                switch clBeacon.proximity {
+                case .unknown: unknownBeacons.append(deviceId)
+                case .immediate: immediateBeacons.append(deviceId)
+                case .near: nearBeacons.append(deviceId)
+                case .far: farBeacons.append(deviceId)
+                }
+                detectedBeaconChange = true
+            }
+            return detectedBeaconChange
+        }
+        
+        private func setUpTriggerBeaconsProximityEvent(forCLProximity: CLProximity) -> ([String], [String: ProximityEvent], Double) {
+            var beacons : [String]
+            var trigger : [String:ProximityEvent]
+            var distance : Double
+            switch forCLProximity {
+            case .immediate:
+                beacons = immediateBeacons
+                trigger = immediateTrigger
+                distance = 0.5
+            case .near:
+                beacons = nearBeacons
+                trigger = nearTrigger
+                distance = 3.0
+            case .far:
+                beacons = farBeacons
+                trigger = farTrigger
+                distance = 50.0
+            case .unknown:
+                beacons = unknownBeacons
+                trigger = unknownTrigger
+                distance = 200.0
+            }
+            return (beacons, trigger, distance)
+        }
+        
+        private func setTrigger(forCLProximity: CLProximity, trigger : [String:ProximityEvent]) {
+            switch forCLProximity{
+            case .immediate:
+                ContextManager.immediateTrigger = trigger
+                break
+            case .near:
+                ContextManager.nearTrigger = trigger
+                break
+            case .far:
+                ContextManager.farTrigger = trigger
+                break
+            case .unknown:
+                ContextManager.unknownTrigger = trigger
+                break
+            }
+        }
+        
+        private func sendProximityEvent(userId: String, deviceId: String, proximityEvent: ProximityEvent, completion: @escaping (_ proximityEvent: ProximityEvent?) -> Void) {
+            let userCompletion = completion
+            let _ = Alps.DeviceAPI.triggerProximityEvents(userId: userId, deviceId: deviceId, proximityEvent: proximityEvent) {
+                (proximityEvent, error) -> Void in
+                userCompletion(proximityEvent)
+            }
+        }
+        
+        private func addProximityEvent(forTrigger: [String:ProximityEvent], id: String, proximityEvent: ProximityEvent) -> [String:ProximityEvent]{
+            var trigger : [String : ProximityEvent] = forTrigger
+            trigger[id] = proximityEvent
+            return trigger
+        }
+    
+        func triggerBeaconsProximityEvent() {
+            for clProximity in CLProximity.allValues{
+                var (beacons, trigger, distance) = setUpTriggerBeaconsProximityEvent(forCLProximity: clProximity)
+                for id in beacons{
+                    // Check if a proximity event already exist
+                    if trigger[id] == nil {
+                        // Send the proximity event
+                        let proximityEvent = ProximityEvent.init(deviceId: id, distance: distance)
+                        let userId = self.contextManager.alpsManager.alpsUser?.user.id
+                        let deviceId = self.contextManager.alpsManager.alpsDevice?.device.id
+                        sendProximityEvent(userId: userId!, deviceId: deviceId!, proximityEvent: proximityEvent) {
+                            (_ proximityEvent) in
+                            switch clProximity {
+                            case .unknown: self.unknownTrigger = self.addProximityEvent(forTrigger: self.unknownTrigger, id: id, proximityEvent: proximityEvent!)
+                            case .immediate: self.immediateTrigger = self.addProximityEvent(forTrigger: self.immediateTrigger, id: id, proximityEvent: proximityEvent!)
+                            case .near: self.nearTrigger = self.addProximityEvent(forTrigger: self.nearTrigger, id: id, proximityEvent: proximityEvent!)
+                            case .far: self.farTrigger = self.addProximityEvent(forTrigger: self.farTrigger, id: id, proximityEvent: proximityEvent!)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    
+        private func refreshTriggers(forCLProximity: CLProximity) {
+            // Check if the existed proximity event needs a refresh on a based timer
+            let proximityEvent = trigger[id]
+            // Represents  the UNIX current time in milliseconds
+            let now = Int64(Date().timeIntervalSince1970 * 1000)
+            if let proximityEventCreatedAt = proximityEvent?.createdAt{
+                let gap = now - proximityEventCreatedAt
+                let truncatedGap = Int(truncatingBitPattern: gap)
+                if truncatedGap > refreshTimer {
+                    // Send the refreshing proximity event based on the timer
+                    let newProximityEvent = ProximityEvent.init(deviceId: id, distance: distance)
+                    let userId = self.alpsManager.alpsUser?.user.id
+                    let deviceId = self.alpsManager.alpsDevice?.device.id
+                    triggerProximityEvent(userId: userId!, deviceId: deviceId!, proximityEvent: newProximityEvent) {
+                        (_ proximityEvent) in
+                        trigger[id] = proximityEvent
+                    }
+                }else{
+                    // Do something when it doesn't need to be refreshed
+                }
+            }
         }
     }
-    
-
 }
