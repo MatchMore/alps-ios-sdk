@@ -567,7 +567,7 @@ open class AlpsManager: AlpsSDK {
     
     // Default time to refresh is 60 seconds(= 60'000 milliseconds)
     public func setRefreshTimerForProximityEvent(refreshEveryInMilliseconds: Int){
-        contextManager?.refreshTimer = refreshEveryInMilliseconds
+        contextManager?.proximityHandler.refreshTimer = refreshEveryInMilliseconds
     }
     
     private func superGetBeacons(completion: @escaping ((_ beacons: [IBeaconDevice]) -> Void)){
