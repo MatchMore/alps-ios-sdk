@@ -70,6 +70,14 @@ open class AlpsManager: AlpsSDK {
         superGetBeacons(completion: {
             (_ beacons) in
             self.beacons = beacons
+            // Launch beacon service
+            print("starting beacon service")
+            var i = 0
+            print(self.contextManager?.getUuid().description)
+            for uuid in (self.contextManager?.getUuid())!{
+                self.contextManager?.startRanging(forUuid: uuid, identifier: "Beacon region \(i)")
+                i += 1
+            }
         })
     }
 
@@ -524,18 +532,6 @@ open class AlpsManager: AlpsSDK {
     public func stopUpdatingLocation() {
         contextManager?.stopUpdatingLocation()
     }
-    
-    //DEVELOP: Beacons
-//    public func getUuid() -> [UUID]{
-//        var uuids : [UUID] = []
-//        for beacon in beacons{
-//            let uuid = beacon.proximityUUID
-//            if !uuids.contains(UUID.init(uuidString: uuid!)!){
-//                uuids.append(UUID.init(uuidString: uuid!)!)
-//            }
-//        }
-//        return uuids
-//    }
     
     public func getClosestOnBeaconUpdate(completion: @escaping ((_ beacon: CLBeacon) -> Void)) {
         if let cm = contextManager {
