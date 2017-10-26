@@ -553,14 +553,6 @@ open class AlpsManager: AlpsSDK {
         contextManager?.stopRanging(forUuid: forUuid)
     }
     
-    public func startBeaconsProximityEvent(forCLProximity: CLProximity){
-        contextManager?.startBeaconsProximityEvent(forCLProximity: forCLProximity)
-    }
-    
-    public func stopBeaconsProximityEvent(forCLProximity: CLProximity){
-        contextManager?.stopBeaconsProximityEvent(forCLProximity: forCLProximity)
-    }
-    
     // Default time to refresh is 60 seconds(= 60'000 milliseconds)
     public func setRefreshTimerForProximityEvent(refreshEveryInMilliseconds: Int){
         contextManager?.proximityHandler.refreshTimer = refreshEveryInMilliseconds
