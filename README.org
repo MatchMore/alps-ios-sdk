@@ -1,0 +1,40 @@
+:PROPERTIES:
+#+OPTIONS: toc:nil
+:END:
+
+* COMMENT This is the master file for README.md!
+
+* Alps iOS SDK
+
+** COMMENT
+
+ [![CI
+ Status](http://img.shields.io/travis/rk/Alps.svg?style=flat)](https://travis-ci.org/rk/Alps)
+ [![Version](https://img.shields.io/cocoapods/v/Alps.svg?style=flat)](http://cocoapods.org/pods/Alps)
+ [![License](https://img.shields.io/cocoapods/l/Alps.svg?style=flat)](http://cocoapods.org/pods/Alps)
+ [![Platform](https://img.shields.io/cocoapods/p/Alps.svg?style=flat)](http://cocoapods.org/pods/Alps)
+
+
+** Example
+
+To run the example project, clone the repo, and run `pod install` from
+the Example directory first.
+
+** Requirements
+
+** Installation
+
+   Alps is available through [[http://cocoapods.org][CocoaPods]] it, simply add the following
+   line to your Podfile:
+
+#+BEGIN_SRC ruby
+  pod 'AlpsSDK', :git => 'https://github.com/MatchMore/alps-ios-sdk.git', :tag => '0.4.0'
+#+END_SRC
+
+** Author
+
+rk, rafal.kowalski@mac.com
+
+** License
+
+Alps is available under the MIT license. See the LICENSE file for more info.

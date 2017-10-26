@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "2A7CC117A0328588DBC06BB0A67A77A6C90443FD",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "385AED1204281BFC5C4696062D0866464EB49562" : 9223372036854775807,
+    "2A7CC117A0328588DBC06BB0A67A77A6C90443FD" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "28811BD9-2220-4279-B1DE-FAE322BB9646",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "385AED1204281BFC5C4696062D0866464EB49562" : "ios-api\/",
+    "2A7CC117A0328588DBC06BB0A67A77A6C90443FD" : "ios-sdk\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "AlpsSDK",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "AlpsSDK.xcworkspace",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "bitbucket.org:alps\/ios-sdk.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "2A7CC117A0328588DBC06BB0A67A77A6C90443FD"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "bitbucket.org:alps\/ios-api.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "385AED1204281BFC5C4696062D0866464EB49562"
+    }
+  ]
+}
